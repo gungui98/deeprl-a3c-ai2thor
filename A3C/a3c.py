@@ -1,32 +1,33 @@
-import sys
-import gym
-import time
 import threading
+import time
+
+import gym
+import keras
 import numpy as np
-
-from tqdm import tqdm
-from keras.models import Model
-from keras import regularizers
+import tensorflow as tf
 from keras.layers import Input, Dense, Flatten, Reshape
+from keras.models import Model
+from tqdm import tqdm
 
-from .critic import Critic
-from .actor import Actor
-from .thread import training_thread
+from gym_ai2thor.envs import AI2ThorEnv
 from utils.atari_environment import AtariEnvironment
 from utils.continuous_environments import Environment
 from utils.networks import conv_block
-from utils.stats import gather_stats
+from .actor import Actor
+from .critic import Critic
+from .thread import training_thread
+
 
 class A3C:
     """ Asynchronous Actor-Critic Main Algorithm
     """
 
-    def __init__(self, act_dim, env_dim, k, gamma = 0.99, lr = 0.0001, is_atari=False):
+    def __init__(self, act_dim, env_dim, k, gamma = 0.99, lr = 0.0001, is_atari=False,is_ai2thor = False):
         """ Initialization
         """
         # Environment and A3C parameters
         self.act_dim = act_dim
-        if(is_atari):
+        if is_atari or is_ai2thor:
             self.env_dim = env_dim
         else:
             self.env_dim = (k,) + env_dim
@@ -50,6 +51,10 @@ class A3C:
             x = Reshape((self.env_dim[1], self.env_dim[2], -1))(inp)
             x = conv_block(x, 32, (2, 2))
             x = conv_block(x, 32, (2, 2))
+            x = conv_block(x, 32, (2, 2))
+            x = conv_block(x, 32, (2, 2))
+            x = Dense(256)(x)
+            x = Dense(128)(x)
             x = Flatten()(x)
         elif(len(self.env_dim)==2):
             # 2D Inputs
@@ -60,6 +65,7 @@ class A3C:
             # 1D Inputs
             x = Dense(64, activation='relu')(inp)
             x = Dense(128, activation='relu')(x)
+        keras.backend.get_session().run(tf.global_variables_initializer())
         return Model(inp, x)
 
     def policy_action(self, s):
@@ -90,7 +96,14 @@ class A3C:
     def train(self, env, args, summary_writer):
 
         # Instantiate one environment per thread
-        if(args.is_atari):
+        if (args.is_ai2thor):
+            config_dict = {'max_episode_length': 2000}
+            envs = [AI2ThorEnv(config_dict=config_dict) for i in range(args.n_threads)]
+            env.reset()
+            state = envs[0].reset()
+            state_dim = state.shape
+            action_dim = envs[0].action_space.n
+        elif(args.is_atari):
             envs = [AtariEnvironment(args) for i in range(args.n_threads)]
             state_dim = envs[0].get_state_size()
             action_dim = envs[0].get_action_size()

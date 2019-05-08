@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from gym_ai2thor.envs.ai2thor_env import AI2ThorEnv
 
 from A2C.a2c import A2C
 from A3C.a3c import A3C
@@ -31,6 +32,7 @@ def parse_args(args):
     #
     parser.add_argument('--type', type=str, default='DDQN',help="Algorithm to train from {A2C, A3C, DDQN, DDPG}")
     parser.add_argument('--is_atari', dest='is_atari', action='store_true', help="Atari Environment")
+    parser.add_argument('--is_ai2thor', dest='is_ai2thor', action='store_true', help="AI2Thor Environment")
     parser.add_argument('--with_PER', dest='with_per', action='store_true', help="Use Prioritized Experience Replay (DDQN + PER)")
     parser.add_argument('--dueling', dest='dueling', action='store_true', help="Use a Dueling Architecture (DDQN)")
     #
@@ -38,7 +40,7 @@ def parse_args(args):
     parser.add_argument('--batch_size', type=int, default=64, help="Batch size (experience replay)")
     parser.add_argument('--consecutive_frames', type=int, default=4, help="Number of consecutive frames (action repeat)")
     parser.add_argument('--training_interval', type=int, default=30, help="Network training frequency")
-    parser.add_argument('--n_threads', type=int, default=8, help="Number of threads (A3C)")
+    parser.add_argument('--n_threads', type=int, default=1, help="Number of threads (A3C)")
     #
     parser.add_argument('--gather_stats', dest='gather_stats', action='store_true',help="Compute Average reward per episode (slower)")
     parser.add_argument('--render', dest='render', action='store_true', help="Render environment while training")
@@ -60,9 +62,16 @@ def main(args=None):
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     set_session(get_session())
     summary_writer = tf.summary.FileWriter(args.type + "/tensorboard_" + args.env)
-
     # Environment Initialization
-    if(args.is_atari):
+    if args.is_ai2thor:
+        config_dict = {'max_episode_length': 2000}
+        env = AI2ThorEnv(config_dict=config_dict)
+        env.reset()
+        state = env.reset()
+        state_dim = state.shape
+        action_dim = env.action_space.n
+
+    elif(args.is_atari):
         # Atari Environment Wrapper
         env = AtariEnvironment(args)
         state_dim = env.get_state_size()
@@ -88,7 +97,7 @@ def main(args=None):
     elif(args.type=="A2C"):
         algo = A2C(action_dim, state_dim, args.consecutive_frames)
     elif(args.type=="A3C"):
-        algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari)
+        algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari,is_ai2thor=args.is_ai2thor)
     elif(args.type=="DDPG"):
         algo = DDPG(action_dim, state_dim, act_range, args.consecutive_frames)
 
@@ -112,7 +121,7 @@ def main(args=None):
         args.batch_size)
 
     algo.save_weights(export_path)
-    env.env.close()
+    env.close()
 
 if __name__ == "__main__":
     main()

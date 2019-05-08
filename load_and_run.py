@@ -1,22 +1,18 @@
 """ Load and display pre-trained model in OpenAI Gym Environment
 """
 
+import argparse
 import os
 import sys
+
 import gym
-import argparse
-import numpy as np
-import pandas as pd
-import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
 
 from A2C.a2c import A2C
 from A3C.a3c import A3C
-from DDQN.ddqn import DDQN
 from DDPG.ddpg import DDPG
-
-from keras.backend.tensorflow_backend import set_session
-from keras.utils import to_categorical
-
+from DDQN.ddqn import DDQN
+from gym_ai2thor.envs.ai2thor_env import AI2ThorEnv
 from utils.atari_environment import AtariEnvironment
 from utils.continuous_environments import Environment
 from utils.networks import get_session
@@ -31,6 +27,7 @@ def parse_args(args):
     #
     parser.add_argument('--type', type=str, default='DDQN',help="Algorithm to train from {A2C, A3C, DDQN, DDPG}")
     parser.add_argument('--is_atari', dest='is_atari', action='store_true', help="Atari Environment")
+    parser.add_argument('--is_ai2thor', dest='is_ai2thor', action='store_true', help="AI2Thor Environment")
     parser.add_argument('--with_PER', dest='with_per', action='store_true', help="Use Prioritized Experience Replay (DDQN + PER)")
     parser.add_argument('--dueling', dest='dueling', action='store_true', help="Use a Dueling Architecture (DDQN)")
     parser.add_argument('--consecutive_frames', type=int, default=4, help="Number of consecutive frames (action repeat)")
@@ -58,7 +55,14 @@ def main(args=None):
     set_session(get_session())
 
     # Environment Initialization
-    if(args.is_atari):
+    if args.is_ai2thor:
+        config_dict = {'max_episode_length': 2000}
+        env = AI2ThorEnv(config_dict=config_dict)
+        env.reset()
+        state = env.reset()
+        state_dim = state.shape
+        action_dim = (1,env.action_space.n)
+    elif(args.is_atari):
         # Atari Environment Wrapper
         env = AtariEnvironment(args)
         state_dim = env.get_state_size()
@@ -86,7 +90,7 @@ def main(args=None):
         algo = A2C(action_dim, state_dim, args.consecutive_frames)
         algo.load_weights(args.actor_path, args.critic_path)
     elif(args.type=="A3C"):
-        algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari)
+        algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari,is_ai2thor=args.is_ai2thor)
         algo.load_weights(args.actor_path, args.critic_path)
     elif(args.type=="DDPG"):
         algo = DDPG(action_dim, state_dim, act_range, args.consecutive_frames)
@@ -95,8 +99,8 @@ def main(args=None):
     # Display agent
     old_state, time = env.reset(), 0
     while True:
-       env.render()
        a = algo.policy_action(old_state)
+       print(a)
        old_state, r, done, _ = env.step(a)
        time += 1
        if done: env.reset()
