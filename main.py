@@ -30,9 +30,12 @@ def parse_args(args):
     parser.add_argument('--is_atari', dest='is_atari', action='store_true', help="Atari Environment")
     parser.add_argument('--is_ai2thor', dest='is_ai2thor', action='store_true', help="AI2Thor Environment")
     #
-    parser.add_argument('--nb_episodes', type=int, default=1, help="Number of training episodes")
+    parser.add_argument('--nb_episodes', type=int, default=5000, help="Number of training episodes")
     parser.add_argument('--batch_size', type=int, default=64, help="Batch size (experience replay)")
-    parser.add_argument('--n_threads', type=int, default=1, help="Number of threads (A3C)")
+    parser.add_argument('--n_threads', type=int, default=5, help="Number of threads (A3C)")
+    parser.add_argument('--consecutive_frames', type=int, default=4,
+                        help="Number of consecutive frames (action repeat)")
+    parser.add_argument('--training_interval', type=int, default=30, help="Network training frequency")
     #
     parser.add_argument('--gather_stats', dest='gather_stats', action='store_true',
                         help="Compute Average reward per episode (slower)")

@@ -14,7 +14,7 @@ to train the model, using:
 
 to visualize result, using:
 
-`python is_ai2thor`
+`python --is_ai2thor --critic_path */A3C/model/critic-model* --actor_path */A3C/model/actor-model*`
 
 The default training parameter is 5000 episodes, 5 threads
 ## Installation
@@ -31,7 +31,7 @@ Highly recommend to install tensorflow using conda:
 ## Project description
 
 * this project using gym-style interface of ai2thor environment
-* objective is simply picking an apple in kitchen environment
+* objective is simply picking an apple in kitchen environment - FloorPlan28
 * observation space is first-view RGB 128x128 image from agent's camera
 * maximum step in this project is 500
 * reward fuction: 

@@ -33,6 +33,9 @@ def parse_args(args):
     #
     parser.add_argument('--env', type=str, default='BreakoutNoFrameskip-v4', help="OpenAI Gym Environment")
     parser.add_argument('--gpu', type=int, default=0, help='GPU ID')
+    parser.add_argument('--consecutive_frames', type=int, default=4,
+                        help="Number of consecutive frames (action repeat)")
+
     #
     parser.set_defaults(render=False)
     return parser.parse_args(args)
@@ -43,7 +46,6 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     args = parse_args(args)
-
     # Check if a GPU ID was set
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -76,10 +78,11 @@ def main(args=None):
     old_state, time = env.reset(), 0
     while True:
         a = algo.policy_action(old_state)
-        print(a)
         old_state, r, done, _ = env.step(a)
         time += 1
-        if done: env.reset()
+        if done:
+            print('----- done, resetting env ----')
+            env.reset()
 
 
 if __name__ == "__main__":
