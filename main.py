@@ -29,15 +29,9 @@ def parse_args(args):
     parser.add_argument('--type', type=str, default='A3C', help="Algorithm to train from { A3C }")
     parser.add_argument('--is_atari', dest='is_atari', action='store_true', help="Atari Environment")
     parser.add_argument('--is_ai2thor', dest='is_ai2thor', action='store_true', help="AI2Thor Environment")
-    parser.add_argument('--with_PER', dest='with_per', action='store_true',
-                        help="Use Prioritized Experience Replay (DDQN + PER)")
-    parser.add_argument('--dueling', dest='dueling', action='store_true', help="Use a Dueling Architecture (DDQN)")
     #
     parser.add_argument('--nb_episodes', type=int, default=1, help="Number of training episodes")
     parser.add_argument('--batch_size', type=int, default=64, help="Batch size (experience replay)")
-    parser.add_argument('--consecutive_frames', type=int, default=4,
-                        help="Number of consecutive frames (action repeat)")
-    parser.add_argument('--training_interval', type=int, default=30, help="Network training frequency")
     parser.add_argument('--n_threads', type=int, default=1, help="Number of threads (A3C)")
     #
     parser.add_argument('--gather_stats', dest='gather_stats', action='store_true',
@@ -59,8 +53,6 @@ def main(args=None):
     # Check if a GPU ID was set
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-    set_session(get_session())
-    summary_writer = tf.summary.FileWriter(args.type + "/tensorboard_" + args.env)
     # Environment Initialization
     if args.is_ai2thor:
         config_dict = {'max_episode_length': 500}
@@ -83,14 +75,15 @@ def main(args=None):
         env.reset()
         state_dim = env.get_state_size()
         action_dim = gym.make(args.env).action_space.n
-
+    set_session(get_session())
+    summary_writer = tf.summary.FileWriter(args.type + "/tensorboard_" + args.env)
     algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari, is_ai2thor=args.is_ai2thor)
 
     # Train
     stats = algo.train(env, args, summary_writer)
 
     # Export results to CSV
-    if (args.gather_stats):
+    if args.gather_stats:
         df = pd.DataFrame(np.array(stats))
         df.to_csv(args.type + "/logs.csv", header=['Episode', 'Mean', 'Stddev'], float_format='%10.5f')
 

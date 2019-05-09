@@ -50,7 +50,6 @@ class A3C:
         base_model = MobileNetV2(input_shape=self.env_dim,weights='imagenet', include_top=False)
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
-        # x = Dense(1024, activation='relu')(x)
         predictions = Dense(1024, activation='relu')(x)
 
         model = Model(inputs=base_model.input, outputs=predictions)

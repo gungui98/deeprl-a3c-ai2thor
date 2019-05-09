@@ -65,9 +65,9 @@ class PickUpTask(BaseTask):
         curr_inventory = state.metadata['inventoryObjects']
         object_picked_up = not self.prev_inventory and curr_inventory and \
                            curr_inventory[0]['objectType'] in self.target_objects
-        if state.metadata['objects'][48]['visible']:
-            print('seen an apple!')
-            reward += 0.1
+        # if state.metadata['objects'][48]['visible']:
+        #     print('seen an apple!')
+        #     reward += 0.1
         if object_picked_up:
             # One of the Target objects has been picked up. Add reward from the specific object
             reward += self.target_objects.get(curr_inventory[0]['objectType'], 0)
