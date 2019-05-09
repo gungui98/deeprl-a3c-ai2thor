@@ -69,7 +69,6 @@ def main(args=None):
         state = env.reset()
         state_dim = state.shape
         action_dim = env.action_space.n
-        env.close()
     elif (args.is_atari):
         # Atari Environment Wrapper
         env = AtariEnvironment(args)

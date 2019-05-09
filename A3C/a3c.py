@@ -5,10 +5,11 @@ import gym
 import keras
 import numpy as np
 import tensorflow as tf
-from keras.layers import Input, Dense, Flatten, Reshape
+from keras.layers import Input, Dense, Flatten, Reshape, GlobalAveragePooling2D
 from keras.models import Model
 from tqdm import tqdm
 
+from keras.applications.mobilenet_v2 import MobileNetV2
 from gym_ai2thor.envs import AI2ThorEnv
 from utils.atari_environment import AtariEnvironment
 from utils.continuous_environments import Environment
@@ -44,29 +45,19 @@ class A3C:
     def buildNetwork(self):
         """ Assemble shared layers
         """
-        inp = Input((self.env_dim))
         # If we have an image, apply convolutional layers
-        if(len(self.env_dim) > 2):
-            # Images
-            x = Reshape((self.env_dim[1], self.env_dim[2], -1))(inp)
-            x = conv_block(x, 32, (2, 2))
-            x = conv_block(x, 32, (2, 2))
-            # x = conv_block(x, 32, (2, 2))
-            # x = conv_block(x, 32, (2, 2))
-            x = Dense(256)(x)
-            x = Dense(128)(x)
-            x = Flatten()(x)
-        elif(len(self.env_dim)==2):
-            # 2D Inputs
-            x = Flatten()(inp)
-            x = Dense(64, activation='relu')(x)
-            x = Dense(128, activation='relu')(x)
-        else:
-            # 1D Inputs
-            x = Dense(64, activation='relu')(inp)
-            x = Dense(128, activation='relu')(x)
-        keras.backend.get_session().run(tf.global_variables_initializer())
-        return Model(inp, x)
+        # Images
+        base_model = MobileNetV2(input_shape=self.env_dim,weights='imagenet', include_top=False)
+        x = base_model.output
+        x = GlobalAveragePooling2D()(x)
+        # x = Dense(1024, activation='relu')(x)
+        predictions = Dense(1024, activation='relu')(x)
+
+        model = Model(inputs=base_model.input, outputs=predictions)
+
+        for layer in base_model.layers:
+            layer.trainable = False
+        return model
 
     def policy_action(self, s):
         """ Use the actor's network to predict the next action to take, using the policy

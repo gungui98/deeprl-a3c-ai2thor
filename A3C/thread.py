@@ -27,6 +27,7 @@ def training_thread(agent, Nmax, env, action_dim, f, summary_writer, tqdm, rende
             a = agent.policy_action(np.expand_dims(old_state, axis=0))
             # Retrieve new state, reward, and whether the state is terminal
             new_state, r, done, _ = env.step(a)
+            print( a, r, done)
             # Memorize (s, a, r) for training
             actions.append(to_categorical(a, action_dim))
             rewards.append(r)

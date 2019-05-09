@@ -6,6 +6,7 @@ inheriting the predefined methods and can be extended for particular tasks.
 import os
 
 import ai2thor.controller
+import cv2
 import numpy as np
 from skimage import transform
 from collections import defaultdict
@@ -22,8 +23,8 @@ ALL_POSSIBLE_ACTIONS = [
     'MoveBack',
     'MoveRight',
     'MoveLeft',
-    # 'LookUp',
-    # 'LookDown',
+    'LookUp',
+    'LookDown',
     'RotateRight',
     'RotateLeft',
     # 'OpenObject',
@@ -242,9 +243,11 @@ class AI2ThorEnv(gym.Env):
         # TODO: replace scikit image with opencv
         img = transform.resize(img, self.config['resolution'], mode='reflect')
         img = img.astype(np.float32)
-        if self.observation_space.shape[0] == 1:
-            img = rgb2gray(img)
-        img = np.moveaxis(img, 2, 0)
+        # if self.observation_space.shape[0] == 1:
+        #     img = rgb2gray(img)
+        # img = np.moveaxis(img, 2, 0)
+        # cv2.imshow('frame.jpg',img)
+        # cv2.waitKey(1)
         return img
 
     def reset(self):
