@@ -16,6 +16,8 @@ class Critic(Agent):
         self.discounted_r = K.placeholder(shape=(None,))
         # Pre-compile for threading
         self.model._make_predict_function()
+        print('---------critic---------')
+        print(self.model.summary())
 
     def addHead(self, network):
         """ Assemble Critic network to predict value of each state

@@ -6,9 +6,7 @@
         "Mug"
     ],
     "acceptable_receptacles": [
-        "CounterTop",
-        "TableTop",
-        "Sink"
+        "TableTop"
     ],
     "openable_objects": [
     ],

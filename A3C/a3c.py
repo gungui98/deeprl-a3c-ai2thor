@@ -51,8 +51,8 @@ class A3C:
             x = Reshape((self.env_dim[1], self.env_dim[2], -1))(inp)
             x = conv_block(x, 32, (2, 2))
             x = conv_block(x, 32, (2, 2))
-            x = conv_block(x, 32, (2, 2))
-            x = conv_block(x, 32, (2, 2))
+            # x = conv_block(x, 32, (2, 2))
+            # x = conv_block(x, 32, (2, 2))
             x = Dense(256)(x)
             x = Dense(128)(x)
             x = Flatten()(x)
@@ -97,7 +97,7 @@ class A3C:
 
         # Instantiate one environment per thread
         if (args.is_ai2thor):
-            config_dict = {'max_episode_length': 2000}
+            config_dict = {'max_episode_length': 500}
             envs = [AI2ThorEnv(config_dict=config_dict) for i in range(args.n_threads)]
             env.reset()
             state = envs[0].reset()

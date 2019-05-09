@@ -8,10 +8,7 @@ import sys
 import gym
 from keras.backend.tensorflow_backend import set_session
 
-from A2C.a2c import A2C
 from A3C.a3c import A3C
-from DDPG.ddpg import DDPG
-from DDQN.ddqn import DDQN
 from gym_ai2thor.envs.ai2thor_env import AI2ThorEnv
 from utils.atari_environment import AtariEnvironment
 from utils.continuous_environments import Environment
@@ -25,7 +22,7 @@ def parse_args(args):
     """
     parser = argparse.ArgumentParser(description='Training parameters')
     #
-    parser.add_argument('--type', type=str, default='DDQN',help="Algorithm to train from {A2C, A3C, DDQN, DDPG}")
+    parser.add_argument('--type', type=str, default='A3C',help="Algorithm to train from {A2C, A3C, DDQN, DDPG}")
     parser.add_argument('--is_atari', dest='is_atari', action='store_true', help="Atari Environment")
     parser.add_argument('--is_ai2thor', dest='is_ai2thor', action='store_true', help="AI2Thor Environment")
     parser.add_argument('--with_PER', dest='with_per', action='store_true', help="Use Prioritized Experience Replay (DDQN + PER)")
@@ -67,14 +64,6 @@ def main(args=None):
         env = AtariEnvironment(args)
         state_dim = env.get_state_size()
         action_dim = env.get_action_size()
-    elif(args.type=="DDPG"):
-        # Continuous Environments Wrapper
-        env = Environment(gym.make(args.env), args.consecutive_frames)
-        env.reset()
-        state_dim = env.get_state_size()
-        action_space = gym.make(args.env).action_space
-        action_dim = action_space.high.shape[0]
-        act_range = action_space.high
     else:
         # Standard Environments
         env = Environment(gym.make(args.env), args.consecutive_frames)
@@ -82,19 +71,9 @@ def main(args=None):
         state_dim = env.get_state_size()
         action_dim = gym.make(args.env).action_space.n
 
-    # Pick algorithm to train
-    if(args.type=="DDQN"):
-        algo = DDQN(action_dim, state_dim, args)
-        algo.load_weights(args.model_path)
-    elif(args.type=="A2C"):
-        algo = A2C(action_dim, state_dim, args.consecutive_frames)
-        algo.load_weights(args.actor_path, args.critic_path)
-    elif(args.type=="A3C"):
-        algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari,is_ai2thor=args.is_ai2thor)
-        algo.load_weights(args.actor_path, args.critic_path)
-    elif(args.type=="DDPG"):
-        algo = DDPG(action_dim, state_dim, act_range, args.consecutive_frames)
-        algo.load_weights(args.actor_path, args.critic_path)
+
+    algo = A3C(action_dim, state_dim, args.consecutive_frames, is_atari=args.is_atari,is_ai2thor=args.is_ai2thor)
+    algo.load_weights(args.actor_path, args.critic_path)
 
     # Display agent
     old_state, time = env.reset(), 0

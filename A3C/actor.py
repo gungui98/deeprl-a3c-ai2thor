@@ -17,6 +17,8 @@ class Actor(Agent):
         self.advantages_pl = K.placeholder(shape=(None,))
         # Pre-compile for threading
         self.model._make_predict_function()
+        print('---------actor---------')
+        print(self.model.summary())
 
     def addHead(self, network):
         """ Assemble Actor network to predict probability of each action
