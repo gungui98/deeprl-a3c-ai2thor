@@ -80,7 +80,7 @@ class AI2ThorEnv(gym.Env):
         self.continuous_movement = self.config.get('continuous_movement', False)
         if self.continuous_movement:
             self.absolute_rotation = 0.0
-            self.rotation_amount = 10.0
+            self.rotation_amount = 2.0
 
         # Image settings
         self.event = None
